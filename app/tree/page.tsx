@@ -21,27 +21,34 @@ export default function TreePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const auth = async () => {
-      const { data } = await supabase.auth.getUser()
-      if (!data?.user) window.location.href = "/login"
-    }
     const load = async () => {
       const { data: members } = await supabase.from("family_members").select("id,name")
       const { data: relations } = await supabase.from("relationships").select("from_id,to_id,relation_type")
 
-      if (!members || !relations) { setTreeData(null); setLoading(false); return }
+      if (!members || members.length === 0) {
+        setTreeData(null)
+        setLoading(false)
+        return
+      }
+
+      const visited = new Set<string>()
 
       const build = (rootId: string, relation: CustomTreeNode["relation"] = "root"): CustomTreeNode | null => {
+        if (visited.has(rootId)) return null
+        visited.add(rootId)
+
         const me = (members as Member[]).find(m => m.id === rootId)
         if (!me) return null
 
         const children: CustomTreeNode[] = (relations as Relationship[])
           .filter(r => r.from_id === rootId && r.relation_type === "parent")
-          .map(r => build(r.to_id, "child")).filter((c): c is CustomTreeNode => c !== null)
+          .map(r => build(r.to_id, "child"))
+          .filter((c): c is CustomTreeNode => c !== null)
 
         const parents: CustomTreeNode[] = (relations as Relationship[])
           .filter(r => r.to_id === rootId && r.relation_type === "parent")
-          .map(r => build(r.from_id, "parent")).filter((p): p is CustomTreeNode => p !== null)
+          .map(r => build(r.from_id, "parent"))
+          .filter((p): p is CustomTreeNode => p !== null)
 
         const spouses: CustomTreeNode[] = (relations as Relationship[])
           .filter(r => (r.from_id === rootId || r.to_id === rootId) && r.relation_type === "spouse")
@@ -52,10 +59,11 @@ export default function TreePage() {
         return { id: me.id, name: me.name, relation, children: merged.length ? merged : undefined }
       }
 
-      const root = (members as Member[]).length ? build((members as Member[])[0].id, "root") : null
-      setTreeData(root); setLoading(false)
+      const root = build((members as Member[])[0].id, "root")
+      setTreeData(root)
+      setLoading(false)
     }
-    auth()
+
     load()
   }, [])
 
