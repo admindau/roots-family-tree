@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body { height: 100%; }
+body { @apply bg-black text-white; }
+
+body {
+  background:
+    radial-gradient(900px 480px at 50% -10%, rgba(22,163,74,.18), transparent 60%),
+    radial-gradient(700px 360px at 90% 10%, rgba(250,204,21,.10), transparent 60%),
+    radial-gradient(700px 360px at 10% 10%, rgba(220,38,38,.10), transparent 60%),
+    #000;
+}
+
+.glass { @apply bg-white/10 backdrop-blur-md border border-white/15 shadow-neon rounded-2xl; }
+.rasta-line { @apply h-1 w-36 rounded-full mx-auto; background: linear-gradient(90deg,#dc2626,#facc15,#16a34a); }
+.logo-glow { animation: glow 2s ease-in-out infinite; }
